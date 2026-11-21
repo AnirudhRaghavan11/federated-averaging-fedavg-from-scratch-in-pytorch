@@ -70,8 +70,38 @@ def partition_data_iid(train_features, train_labels, num_clients, seed):
 
   return list(zip(client_features, client_labels))
 
-# Step 5 - partition_data_non_iid (not yet solved)
-# TODO: implement
+# Step 5 - partition_data_non_iid
+import torch
+
+
+def partition_data_non_iid(
+    train_features, train_labels, num_clients, shards_per_client, seed
+):
+  # 1. Sort all row indices by label
+  sorted_indices = torch.argsort(train_labels, stable=True)
+
+  # 2. Split sorted indices into contiguous label-grouped shards
+  total_shards = num_clients * shards_per_client
+  shard_indices = torch.tensor_split(sorted_indices, total_shards, dim=0)
+
+  # 3. Shuffle the shard IDs (0 .. total_shards - 1) once
+  generator = torch.Generator(device=train_features.device)
+  generator.manual_seed(seed)
+  shuffled_shard_ids = torch.randperm(
+      total_shards, generator=generator, device=train_features.device
+  ).tolist()
+
+  # 4. Deal shards_per_client shards to each client and concatenate
+  partitions = []
+  for c in range(num_clients):
+    start = c * shards_per_client
+    end = start + shards_per_client
+    client_shard_ids = shuffled_shard_ids[start:end]
+
+    client_idx = torch.cat([shard_indices[i] for i in client_shard_ids], dim=0)
+    partitions.append((train_features[client_idx], train_labels[client_idx]))
+
+  return partitions
 
 # Step 6 - count_client_samples (not yet solved)
 # TODO: implement

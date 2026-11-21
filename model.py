@@ -103,8 +103,10 @@ def partition_data_non_iid(
 
   return partitions
 
-# Step 6 - count_client_samples (not yet solved)
-# TODO: implement
+# Step 6 - count_client_samples
+def count_client_samples(client_partitions):
+    # TODO: return a list of per-client sample counts in the same order
+    return [int(features.shape[0]) for features, _ in client_partitions]
 
 # Step 7 - iterate_client_batches (not yet solved)
 # TODO: implement
